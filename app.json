@@ -1,0 +1,53 @@
+{
+  "expo": {
+    "name": "Temple Devotee",
+    "slug": "temple-devotee-app",
+    "scheme": "templeapp",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./src/assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./src/assets/logo-diya.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FCFAF6"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yourorg.templedevotee",
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "remote-notification"
+        ]
+      }
+    },
+    "android": {
+      "package": "com.yourorg.templedevotee",
+      "adaptiveIcon": {
+        "foregroundImage": "./src/assets/icon.png",
+        "backgroundColor": "#FCFAF6"
+      },
+      "permissions": [
+        "NOTIFICATIONS"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./src/assets/icon.png",
+          "color": "#7A263A"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "dd677288-555f-48af-915f-136283377a6f"
+      }
+    },
+    "owner": "souvagya"
+  }
+}
