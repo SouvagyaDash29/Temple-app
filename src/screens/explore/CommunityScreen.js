@@ -1,12 +1,11 @@
 // src/screens/explore/CommunityScreen.js
-// Phase 1 scaffold for "Family / Sharing -> full social network". This is
-// intentionally minimal: list + search + join/leave + create. A real feed,
-// posts, comments, and group-scoped events are future work — see the model
-// sketched in services/communityApi.js.
+// Community list with server-style pagination (infinite scroll + pull to
+// refresh + page indicator). List + search + join/leave + create.
 import React, { useState } from 'react';
-import { View, StyleSheet, TextInput, FlatList, Pressable } from 'react-native';
+import { View, StyleSheet, TextInput, FlatList, Pressable, ActivityIndicator, RefreshControl } from 'react-native';
 import { Search, Users, Lock } from 'lucide-react-native';
 import { useTheme } from '../../theme/ThemeContext';
+import { useTranslation } from '../../i18n';
 import AppText from '../../components/AppText';
 import Button from '../../components/Button';
 import Card from '../../components/Card';
@@ -17,8 +16,9 @@ import { useCommunities } from '../../hooks/useCommunities';
 
 export default function CommunityScreen({ navigation }) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const styles = getStyles(theme);
-  const { groups, loading, error, search, joinGroup, leaveGroup } = useCommunities();
+  const { groups, loading, loadingMore, refreshing, error, page, total, hasMore, search, loadMore, refresh, joinGroup, leaveGroup } = useCommunities();
   const [query, setQuery] = useState('');
 
   const handleSearch = (text) => {
@@ -26,16 +26,20 @@ export default function CommunityScreen({ navigation }) {
     search(text);
   };
 
+  const handleEndReached = () => {
+    if (hasMore) loadMore(query);
+  };
+
   return (
     <Screen>
       <View style={styles.header}>
-        <AppText variant="h2">Communities</AppText>
+        <AppText variant="h2">{t('communities')}</AppText>
         <View style={styles.searchBar}>
           <Search size={18} color={theme.color.textSecondary} />
           <TextInput
             value={query}
             onChangeText={handleSearch}
-            placeholder="Search communities"
+            placeholder={t('search')}
             placeholderTextColor={theme.color.textDisabled}
             style={styles.searchInput}
           />
@@ -54,15 +58,38 @@ export default function CommunityScreen({ navigation }) {
             onLeave={() => leaveGroup(item.id)}
           />
         )}
+        ListFooterComponent={
+          loadingMore ? (
+            <View style={styles.footer}>
+              <ActivityIndicator color={theme.color.primary} />
+            </View>
+          ) : groups.length > 0 ? (
+            <View style={styles.footer}>
+              <AppText variant="caption" color="textSecondary">
+                {t('pageOf', { page, total: Math.ceil(total / 10) || 1 })}
+              </AppText>
+              {!hasMore ? (
+                <AppText variant="caption" color="textSecondary">
+                  {t('endOfList')}
+                </AppText>
+              ) : null}
+            </View>
+          ) : null
+        }
         ListEmptyComponent={
           !loading ? (
             <EmptyState
-              title="No communities yet"
-              description="Be the first to create one for your temple or tradition."
-              actionLabel="Create Group"
+              title={t('communitiesEmptyTitle')}
+              description={t('communitiesEmptyDescription')}
+              actionLabel={t('createGroup')}
               onAction={() => navigation.navigate('CreateGroup')}
             />
           ) : null
+        }
+        onEndReached={handleEndReached}
+        onEndReachedThreshold={0.4}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={() => refresh(query)} tintColor={theme.color.primary} />
         }
       />
 
@@ -78,6 +105,7 @@ export default function CommunityScreen({ navigation }) {
 }
 
 function GroupRow({ group, theme, onJoin, onLeave }) {
+  const { t } = useTranslation();
   const styles = getStyles(theme);
   return (
     <Card style={{ marginBottom: theme.spacing.md }}>
@@ -93,11 +121,11 @@ function GroupRow({ group, theme, onJoin, onLeave }) {
             {group.isPrivate ? <Lock size={14} color={theme.color.textSecondary} /> : null}
           </View>
           <AppText variant="caption" color="textSecondary" numberOfLines={1}>
-            {group.memberCount || 0} members
+            {t('membersCount', { count: group.memberCount || 0 })}
           </AppText>
         </View>
         <Button
-          label={group.isMember ? 'Leave' : 'Join'}
+          label={group.isMember ? t('leaveGroup') : t('joinGroup')}
           variant={group.isMember ? 'secondary' : 'primary'}
           fullWidth={false}
           onPress={group.isMember ? onLeave : onJoin}
@@ -124,6 +152,7 @@ const getStyles = (theme) =>
     },
     searchInput: { flex: 1, marginLeft: theme.spacing.sm, color: theme.color.text, fontSize: 16 },
     listContent: { paddingHorizontal: theme.spacing.base, paddingBottom: theme.spacing.huge },
+    footer: { alignItems: 'center', paddingVertical: theme.spacing.lg },
     row: { flexDirection: 'row', alignItems: 'center' },
     iconWrap: {
       width: 40,

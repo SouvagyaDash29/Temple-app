@@ -16,11 +16,13 @@ import Fab from '../components/Fab';
 import { useCalendarMonth } from '../hooks/useCalendarMonth';
 import { useDayDetails } from '../hooks/useDayDetails';
 import { usePreferences } from '../hooks/usePreferences';
+import { useTranslation } from '../i18n';
 import { formatFullDate } from '../utils/date';
 import { screenPadding } from '../constants/spacing';
 
 export default function CalendarScreen({ userName = 'Devotee', onAddEvent, onOpenEvent, onOpenPreferences }) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const styles = getStyles(theme);
   const today = new Date();
 
@@ -78,9 +80,9 @@ export default function CalendarScreen({ userName = 'Devotee', onAddEvent, onOpe
       >
         <View style={styles.headerRow}>
           <View>
-            <AppText variant="h2">Good morning, {userName}</AppText>
+            <AppText variant="h2">{t('goodMorning')}, {userName}</AppText>
             <AppText variant="bodySmall" color="textSecondary">
-              {preferences?.state ? 'Your spiritual calendar' : 'Set your state to see festivals \u2192'}
+              {preferences?.state ? t('yourSpiritualCalendar') : t('setStatePrompt')}
             </AppText>
           </View>
           <Image
@@ -115,7 +117,7 @@ export default function CalendarScreen({ userName = 'Devotee', onAddEvent, onOpe
 
             {personalEvents.length > 0 && (
               <>
-                <SectionLabel text="Your Events" />
+                <SectionLabel text={t('yourEvents')} />
                 {personalEvents.map((event) => (
                   <EventCard key={event.id} event={event} onPress={onOpenEvent} />
                 ))}
@@ -124,7 +126,7 @@ export default function CalendarScreen({ userName = 'Devotee', onAddEvent, onOpe
 
             {templeEvents.length > 0 && (
               <>
-                <SectionLabel text="Festivals & Temple Events" />
+                <SectionLabel text={t('festivalsAndTempleEvents')} />
                 {templeEvents.map((event) => (
                   <EventCard key={event.id} event={event} onPress={onOpenEvent} />
                 ))}
@@ -133,9 +135,9 @@ export default function CalendarScreen({ userName = 'Devotee', onAddEvent, onOpe
 
             {!observances.length && !personalEvents.length && !templeEvents.length && (
               <EmptyState
-                title="Make your calendar personal"
-                description="Add birthdays, anniversaries, pujas and important occasions."
-                actionLabel="+ Add Event"
+                title={t('calendarEmptyTitle')}
+                description={t('calendarEmptyDescription')}
+                actionLabel={t('addEvent')}
                 onAction={() => onAddEvent?.(selectedDate)}
               />
             )}
@@ -149,7 +151,7 @@ export default function CalendarScreen({ userName = 'Devotee', onAddEvent, onOpe
         ) : null}
       </ScrollView>
 
-      <Fab onPress={() => onAddEvent?.(selectedDate)} />
+      <Fab onPress={() => onAddEvent?.(selectedDate)} accessibilityLabel={t('addEventA11y')} />
     </Screen>
   );
 }

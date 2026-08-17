@@ -3,43 +3,47 @@ import React, { useRef, useState } from 'react';
 import { View, StyleSheet, FlatList, useWindowDimensions } from 'react-native';
 import { Calendar, Bell, Heart, Settings } from 'lucide-react-native';
 import { useTheme } from '../theme/ThemeContext';
+import { useTranslation } from '../i18n';
 import AppText from '../components/AppText';
 import Button from '../components/Button';
 import Screen from '../components/Screen';
 
-const SLIDES = [
-  {
-    key: 'welcome',
-    icon: Calendar,
-    title: 'Your spiritual calendar, your way.',
-    description: 'A peaceful space to track festivals, personal milestones, and temple events.',
-  },
-  {
-    key: 'reminders',
-    icon: Bell,
-    title: 'Never miss an important festival or personal occasion.',
-    description: 'Gentle reminders for the dates that matter to you — nothing more.',
-  },
-  {
-    key: 'personalize',
-    icon: Heart,
-    title: 'Personalize your calendar with the traditions and temples that matter to you.',
-    description: 'Follow your favourite temples and deities to see what matters to you first.',
-  },
-  {
-    key: 'preferences',
-    icon: Settings,
-    title: 'Choose your preferences',
-    description: 'Language, location and favourite temples — just the essentials, nothing more.',
-    isLast: true,
-  },
-];
+const SLIDE_ICONS = [Calendar, Bell, Heart, Settings];
 
 export default function OnboardingScreen({ onComplete }) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const { width } = useWindowDimensions();
   const [index, setIndex] = useState(0);
   const listRef = useRef(null);
+
+  const SLIDES = [
+    {
+      key: 'welcome',
+      icon: SLIDE_ICONS[0],
+      title: t('obSlide1Title'),
+      description: t('obSlide1Desc'),
+    },
+    {
+      key: 'reminders',
+      icon: SLIDE_ICONS[1],
+      title: t('obSlide2Title'),
+      description: t('obSlide2Desc'),
+    },
+    {
+      key: 'personalize',
+      icon: SLIDE_ICONS[2],
+      title: t('obSlide3Title'),
+      description: t('obSlide3Desc'),
+    },
+    {
+      key: 'preferences',
+      icon: SLIDE_ICONS[3],
+      title: t('obSlide4Title'),
+      description: t('obSlide4Desc'),
+      isLast: true,
+    },
+  ];
 
   const goNext = () => {
     if (index === SLIDES.length - 1) {
@@ -89,9 +93,9 @@ export default function OnboardingScreen({ onComplete }) {
       </View>
 
       <View style={styles(theme).footer}>
-        <Button label={index === SLIDES.length - 1 ? 'Get started' : 'Next'} onPress={goNext} />
+        <Button label={index === SLIDES.length - 1 ? t('obGetStarted') : t('obNext')} onPress={goNext} />
         {index < SLIDES.length - 1 && (
-          <Button label="Skip" variant="text" onPress={() => onComplete?.()} style={{ marginTop: theme.spacing.sm }} />
+          <Button label={t('obSkip')} variant="text" onPress={() => onComplete?.()} style={{ marginTop: theme.spacing.sm }} />
         )}
       </View>
     </Screen>

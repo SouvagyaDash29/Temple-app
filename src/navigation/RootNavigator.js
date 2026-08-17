@@ -22,6 +22,7 @@ import {
 import { useTheme } from '../theme/ThemeContext';
 import { useAuthContext } from '../context/AuthContext';
 import { useGoogleCalendar } from '../hooks/useGoogleCalendar';
+import { useTranslation } from '../i18n';
 import AppText from '../components/AppText';
 import Button from '../components/Button';
 import Card from '../components/Card';
@@ -29,6 +30,8 @@ import Screen from '../components/Screen';
 import CalendarScreen from '../screens/CalendarScreen';
 import AddEventScreen from '../screens/AddEventScreen';
 import PreferencesScreen from '../screens/PreferencesScreen';
+import SettingsScreen from '../screens/SettingsScreen';
+import FestivalDetailScreen from '../screens/FestivalDetailScreen';
 import SetPinScreen from '../screens/auth/SetPinScreen';
 import ExploreHomeScreen from '../screens/explore/ExploreHomeScreen';
 import AllEventsScreen from '../screens/explore/AllEventsScreen';
@@ -58,6 +61,7 @@ function initialsFor(text) {
 function MeScreen({ navigation }) {
   const theme = useTheme();
   const styles = getMeStyles(theme);
+  const { t } = useTranslation();
   const { session, logout } = useAuthContext();
 
   return (
@@ -75,10 +79,10 @@ function MeScreen({ navigation }) {
             </View>
           </View>
           <AppText variant="h3" style={{ color: theme.color.white, marginTop: theme.spacing.md }}>
-            Namaste Devotee
+            {t('meNamaste')}
           </AppText>
           <AppText variant="bodySmall" style={{ color: theme.color.accentLight, marginTop: 2 }}>
-            Customer ID: {session.customerId || '\u2014'}
+            {t('meCustomerId', { id: session.customerId || '\u2014' })}
           </AppText>
         </View>
 
@@ -89,28 +93,36 @@ function MeScreen({ navigation }) {
                 <Sparkles size={18} color={theme.color.accent} />
               </View>
               <View style={{ flex: 1 }}>
-                <AppText variant="caption" color="textSecondary">REFERENCE CODE</AppText>
+                <AppText variant="caption" color="textSecondary">{t('meReferenceCode').toUpperCase()}</AppText>
                 <AppText variant="h3">{session.custRefCode || '\u2014'}</AppText>
               </View>
             </View>
           </Card>
 
           <AppText variant="caption" color="textSecondary" style={styles.sectionLabel}>
-            SETTINGS
+            {t('meSettings').toUpperCase()}
           </AppText>
           <Card noPadding style={{ overflow: 'hidden', marginBottom: theme.spacing.xl }}>
             <MenuRow
               icon={Settings}
-              label="Calendar preferences"
-              sublabel="State, panji & festival source"
+              label={t('meAppearance')}
+              sublabel={`${t('language')} · ${t('settingsThemeColor')}`}
+              onPress={() => navigation.navigate('Settings')}
+              theme={theme}
+            />
+            <Divider theme={theme} />
+            <MenuRow
+              icon={Settings}
+              label={t('meCalendarPreferences')}
+              sublabel={t('meCalendarPreferencesSub')}
               onPress={() => navigation.navigate('Preferences')}
               theme={theme}
             />
             <Divider theme={theme} />
             <MenuRow
               icon={KeyRound}
-              label="Change PIN"
-              sublabel="Update your login PIN"
+              label={t('meChangePin')}
+              sublabel={t('meChangePinSub')}
               onPress={() => navigation.navigate('SetPin')}
               theme={theme}
             />
@@ -120,19 +132,18 @@ function MeScreen({ navigation }) {
             GOOGLE CALENDAR
           </AppText>
           <GoogleCalendarCard theme={theme} />
-
           <AppText variant="caption" color="textSecondary" style={styles.sectionLabel}>
-            SUPPORT
+            {t('meSupport').toUpperCase()}
           </AppText>
           <Card noPadding style={{ overflow: 'hidden', marginBottom: theme.spacing.xl }}>
-            <MenuRow icon={Phone} label="Contact support" onPress={() => { }} theme={theme} />
+            <MenuRow icon={Phone} label={t('meContactSupport')} onPress={() => { }} theme={theme} />
             <Divider theme={theme} />
-            <MenuRow icon={Mail} label="Send feedback" onPress={() => { }} theme={theme} />
+            <MenuRow icon={Mail} label={t('meSendFeedback')} onPress={() => { }} theme={theme} />
           </Card>
 
           <MenuRow
             icon={LogOut}
-            label="Log out"
+            label={t('logOut')}
             onPress={logout}
             theme={theme}
             destructive
@@ -150,6 +161,7 @@ function Divider({ theme }) {
 
 function GoogleCalendarCard({ theme }) {
   const styles = getMeStyles(theme);
+  const { t } = useTranslation();
   const { connected, account, connecting, error, connect, disconnect, isRequestReady } = useGoogleCalendar();
 
   if (connected) {
@@ -160,14 +172,14 @@ function GoogleCalendarCard({ theme }) {
             <CalendarCheck size={18} color={theme.color.success} />
           </View>
           <View style={{ flex: 1 }}>
-            <AppText variant="body">Connected</AppText>
+            <AppText variant="body">{t('connected')}</AppText>
             <AppText variant="caption" color="textSecondary" numberOfLines={1}>
               {account || 'Syncing personal events to this account'}
             </AppText>
           </View>
         </View>
         <Button
-          label="Disconnect"
+          label={t('disconnect')}
           variant="secondary"
           onPress={disconnect}
           icon={<Unlink size={16} color={theme.color.primary} />}
@@ -184,7 +196,7 @@ function GoogleCalendarCard({ theme }) {
           <CalendarCheck size={18} color={theme.color.primary} />
         </View>
         <View style={{ flex: 1 }}>
-          <AppText variant="body">Not connected</AppText>
+          <AppText variant="body">{t('notConnected')}</AppText>
           <AppText variant="caption" color="textSecondary">
             Personal events you add won't sync to Google Calendar until you connect.
           </AppText>
@@ -196,7 +208,7 @@ function GoogleCalendarCard({ theme }) {
         </AppText>
       ) : null}
       <Button
-        label={connecting ? 'Connecting\u2026' : 'Connect Google Calendar'}
+        label={connecting ? 'Connecting\u2026' : t('connectGoogleCalendar')}
         onPress={connect}
         loading={connecting}
         disabled={!isRequestReady}
@@ -324,6 +336,10 @@ function CalendarHomeWrapper({ navigation }) {
     <CalendarScreen
       onAddEvent={(date) => navigation.navigate('AddEvent', { date: date?.toISOString() })}
       onOpenEvent={(event) => {
+        if (event.type === 'festival') {
+          navigation.navigate('FestivalDetail', { name: event.title });
+          return;
+        }
         if (event.type !== 'personal' && event.type !== 'reminder') return;
         navigation.navigate('AddEvent', { eventId: event.id });
       }}
@@ -354,12 +370,22 @@ function SetPinWrapper({ navigation }) {
   return <SetPinScreen onDone={() => navigation.goBack()} onCancel={() => navigation.goBack()} />;
 }
 
+function FestivalDetailWrapper({ navigation, route }) {
+  const name = route.params?.name;
+  return <FestivalDetailScreen festivalName={name || ''} onBack={() => navigation.goBack()} />;
+}
+
+function SettingsWrapper({ navigation }) {
+  return <SettingsScreen onClose={() => navigation.goBack()} />;
+}
+
 function CalendarStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="CalendarHome" component={CalendarHomeWrapper} />
       <Stack.Screen name="AddEvent" component={AddEventWrapper} options={{ presentation: 'modal' }} />
       <Stack.Screen name="Preferences" component={PreferencesWrapper} options={{ presentation: 'modal' }} />
+      <Stack.Screen name="FestivalDetail" component={FestivalDetailWrapper} />
     </Stack.Navigator>
   );
 }
@@ -368,6 +394,7 @@ function MeStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="MeHome" component={MeScreen} />
+      <Stack.Screen name="Settings" component={SettingsWrapper} options={{ presentation: 'modal' }} />
       <Stack.Screen name="Preferences" component={PreferencesWrapper} options={{ presentation: 'modal' }} />
       <Stack.Screen name="SetPin" component={SetPinWrapper} options={{ presentation: 'modal' }} />
     </Stack.Navigator>
@@ -389,6 +416,7 @@ function ExploreStack() {
 function Tabs() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   return (
     <Tab.Navigator
       screenOptions={{
@@ -410,9 +438,9 @@ function Tabs() {
         tabBarLabelStyle: { fontFamily: theme.fontFamily.medium, fontSize: 12 },
       }}
     >
-      <Tab.Screen name="Calendar" component={CalendarStack} options={{ tabBarIcon: ({ color, size }) => <CalendarDays color={color} size={size} /> }} />
-      <Tab.Screen name="Explore" component={ExploreStack} options={{ tabBarIcon: ({ color, size }) => <Compass color={color} size={size} /> }} />
-      <Tab.Screen name="Me" component={MeStack} options={{ tabBarIcon: ({ color, size }) => <User color={color} size={size} /> }} />
+      <Tab.Screen name="Calendar" component={CalendarStack} options={{ tabBarLabel: t('calendarTab'), tabBarIcon: ({ color, size }) => <CalendarDays color={color} size={size} /> }} />
+      <Tab.Screen name="Explore" component={ExploreStack} options={{ tabBarLabel: t('exploreTab'), tabBarIcon: ({ color, size }) => <Compass color={color} size={size} /> }} />
+      <Tab.Screen name="Me" component={MeStack} options={{ tabBarLabel: t('meTab'), tabBarIcon: ({ color, size }) => <User color={color} size={size} /> }} />
     </Tab.Navigator>
   );
 }

@@ -38,13 +38,15 @@ export const localStorage = {
   hasChosenPreference: () => getJson(KEYS.PREFERENCE_CHOSEN, false),
   setPreferenceChosen: (value = true) => setJson(KEYS.PREFERENCE_CHOSEN, value),
 
+  // language: 'en' | 'hi' | 'or' (see src/i18n)
+  // accent: theme color key, e.g. 'maroon' | 'saffron' | 'green' | 'blue'
   // state: e.g. 'odisha' | null (no state chosen -> plain calendar, no festival data)
   // panji: e.g. 'jagannath_panji' | null (no panji chosen -> plain calendar within that state)
   getPreferences: () =>
-    getJson(KEYS.PREFERENCES, { language: 'en', state: null, panji: null, deities: [], temples: [] }),
+    getJson(KEYS.PREFERENCES, { language: 'en', accent: 'maroon', state: null, panji: null, deities: [], temples: [] }),
   setPreferences: (prefs) => setJson(KEYS.PREFERENCES, prefs),
   updatePreferences: async (patch) => {
-    const current = await getJson(KEYS.PREFERENCES, { language: 'en', state: null, panji: null, deities: [], temples: [] });
+    const current = await getJson(KEYS.PREFERENCES, { language: 'en', accent: 'maroon', state: null, panji: null, deities: [], temples: [] });
     const next = { ...current, ...patch };
     await setJson(KEYS.PREFERENCES, next);
     return next;

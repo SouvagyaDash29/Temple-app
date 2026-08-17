@@ -15,9 +15,11 @@ import Screen from '../components/Screen';
 import { AVAILABLE_STATES } from '../services/panchangService';
 import { usePreferences } from '../hooks/usePreferences';
 import { useGoogleCalendar } from '../hooks/useGoogleCalendar';
+import { useTranslation } from '../i18n';
 
 export default function PreferencesScreen({ onDone }) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const styles = getStyles(theme);
   const { preferences, setState, setPanji } = usePreferences();
   const {
@@ -37,18 +39,18 @@ export default function PreferencesScreen({ onDone }) {
     <Screen edges={['top', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.content}>
         <AppText variant="h2" style={{ marginBottom: theme.spacing.xs }}>
-          Your calendar
+          {t('preferencesTitle')}
         </AppText>
         <AppText variant="body" color="textSecondary" style={{ marginBottom: theme.spacing.xl }}>
-          Choose your state to see relevant festivals and panchang details.
+          {t('preferencesSubtitle')}
         </AppText>
 
         <AppText variant="caption" color="textSecondary" style={{ marginBottom: theme.spacing.sm }}>
-          STATE
+          {t('preferencesState').toUpperCase()}
         </AppText>
         <Card noPadding style={{ marginBottom: theme.spacing.xl, overflow: 'hidden' }}>
           <OptionRow
-            label="No preference (plain calendar)"
+            label={t('preferencesNoPreference')}
             selected={!preferences.state}
             onPress={() => setState(null)}
           />
@@ -60,11 +62,11 @@ export default function PreferencesScreen({ onDone }) {
         {selectedState && selectedState.panjis.length > 0 && (
           <>
             <AppText variant="caption" color="textSecondary" style={{ marginBottom: theme.spacing.sm }}>
-              PANJI
+              {t('preferencesPanji').toUpperCase()}
             </AppText>
             <Card noPadding style={{ marginBottom: theme.spacing.xl, overflow: 'hidden' }}>
               <OptionRow
-                label="No panji (plain calendar)"
+                label={t('preferencesNoPanji')}
                 selected={!preferences.panji}
                 onPress={() => setPanji(null)}
               />
@@ -103,10 +105,10 @@ export default function PreferencesScreen({ onDone }) {
           {googleConnecting ? (
             <ActivityIndicator color={theme.color.primary} />
           ) : googleConnected ? (
-            <Button label="Disconnect" variant="secondary" onPress={disconnectGoogle} />
+            <Button label={t('disconnect')} variant="secondary" onPress={disconnectGoogle} />
           ) : (
             <Button
-              label="Connect Google Calendar"
+              label={t('connectGoogleCalendar')}
               onPress={connectGoogle}
               disabled={!isRequestReady}
             />
@@ -115,7 +117,7 @@ export default function PreferencesScreen({ onDone }) {
       </ScrollView>
 
       <View style={styles.footer}>
-        <Button label="Done" onPress={onDone} />
+        <Button label={t('commonDone')} onPress={onDone} />
       </View>
     </Screen>
   );

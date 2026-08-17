@@ -3,6 +3,7 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Sparkles } from 'lucide-react-native';
 import { useTheme } from '../../theme/ThemeContext';
+import { useTranslation } from '../../i18n';
 import AppText from '../AppText';
 import Card from '../Card';
 import Badge from '../Badge';
@@ -12,6 +13,7 @@ import Badge from '../Badge';
  */
 export default function ObservancesCard({ observances = [] }) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const styles = getStyles(theme);
 
   if (!observances.length) return null;
@@ -24,7 +26,7 @@ export default function ObservancesCard({ observances = [] }) {
         </View>
         <View style={{ flex: 1 }}>
           <AppText variant="h3" style={{ marginBottom: theme.spacing.sm }}>
-            Today's Observances
+            {t('todaysObservances')}
           </AppText>
           <View style={styles.badgeRow}>
             {observances.map((label) => (
