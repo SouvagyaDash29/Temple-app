@@ -1,6 +1,7 @@
 // src/navigation/RootNavigator.js
 import React from 'react';
-import { View, StyleSheet, Pressable } from 'react-native';
+import { View, StyleSheet, Pressable, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -15,28 +16,27 @@ import {
   Sparkles,
   Phone,
   Mail,
+  CalendarCheck,
+  Unlink,
 } from 'lucide-react-native';
 import { useTheme } from '../theme/ThemeContext';
 import { useAuthContext } from '../context/AuthContext';
+import { useGoogleCalendar } from '../hooks/useGoogleCalendar';
 import AppText from '../components/AppText';
+import Button from '../components/Button';
 import Card from '../components/Card';
 import Screen from '../components/Screen';
 import CalendarScreen from '../screens/CalendarScreen';
-import AddEventScreen from '../screens/dump/AddEventScreen';
-import PreferencesScreen from '../screens/dump/PreferencesScreen';
-import { SetPinScreen } from '../screens/auth1';
+import AddEventScreen from '../screens/AddEventScreen';
+import PreferencesScreen from '../screens/PreferencesScreen';
+import SetPinScreen from '../screens/auth/SetPinScreen';
+import ExploreHomeScreen from '../screens/explore/ExploreHomeScreen';
+import AllEventsScreen from '../screens/explore/AllEventsScreen';
+import CommunityScreen from '../screens/explore/CommunityScreen';
+import CreateGroupScreen from '../screens/explore/CreateGroupScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
-
-function ExploreScreen() {
-  const theme = useTheme();
-  return (
-    <Screen>
-      <Placeholder label="Explore \u2014 temples, sevas & festivals coming soon" theme={theme} />
-    </Screen>
-  );
-}
 
 function Placeholder({ label, theme }) {
   return (
@@ -62,7 +62,7 @@ function MeScreen({ navigation }) {
 
   return (
     <Screen style={{ backgroundColor: theme.color.background }}>
-      <View style={styles.scroll}>
+      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: theme.spacing.huge + 80 }}>
         {/* Header banner — the one place it's OK to lean into the maroon +
             gold devotional identity a little more, since it's a single,
             calm block rather than scattered across the app. */}
@@ -75,7 +75,7 @@ function MeScreen({ navigation }) {
             </View>
           </View>
           <AppText variant="h3" style={{ color: theme.color.white, marginTop: theme.spacing.md }}>
-            Namaste \ud83d\ude4f
+            Namaste Devotee
           </AppText>
           <AppText variant="bodySmall" style={{ color: theme.color.accentLight, marginTop: 2 }}>
             Customer ID: {session.customerId || '\u2014'}
@@ -117,6 +117,11 @@ function MeScreen({ navigation }) {
           </Card>
 
           <AppText variant="caption" color="textSecondary" style={styles.sectionLabel}>
+            GOOGLE CALENDAR
+          </AppText>
+          <GoogleCalendarCard theme={theme} />
+
+          <AppText variant="caption" color="textSecondary" style={styles.sectionLabel}>
             SUPPORT
           </AppText>
           <Card noPadding style={{ overflow: 'hidden', marginBottom: theme.spacing.xl }}>
@@ -134,13 +139,76 @@ function MeScreen({ navigation }) {
             card
           />
         </View>
-      </View>
+      </ScrollView>
     </Screen>
   );
 }
 
 function Divider({ theme }) {
   return <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: theme.color.border }} />;
+}
+
+function GoogleCalendarCard({ theme }) {
+  const styles = getMeStyles(theme);
+  const { connected, account, connecting, error, connect, disconnect, isRequestReady } = useGoogleCalendar();
+
+  if (connected) {
+    return (
+      <Card style={{ marginBottom: theme.spacing.xl }}>
+        <View style={styles.gcalRow}>
+          <View style={[styles.menuIconWrap, { backgroundColor: '#E7F0EA' }]}>
+            <CalendarCheck size={18} color={theme.color.success} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <AppText variant="body">Connected</AppText>
+            <AppText variant="caption" color="textSecondary" numberOfLines={1}>
+              {account || 'Syncing personal events to this account'}
+            </AppText>
+          </View>
+        </View>
+        <Button
+          label="Disconnect"
+          variant="secondary"
+          onPress={disconnect}
+          icon={<Unlink size={16} color={theme.color.primary} />}
+          style={{ marginTop: theme.spacing.md }}
+        />
+      </Card>
+    );
+  }
+
+  return (
+    <Card style={{ marginBottom: theme.spacing.xl }}>
+      <View style={styles.gcalRow}>
+        <View style={styles.menuIconWrap}>
+          <CalendarCheck size={18} color={theme.color.primary} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <AppText variant="body">Not connected</AppText>
+          <AppText variant="caption" color="textSecondary">
+            Personal events you add won't sync to Google Calendar until you connect.
+          </AppText>
+        </View>
+      </View>
+      {error ? (
+        <AppText variant="caption" color="error" style={{ marginTop: theme.spacing.sm }}>
+          {error}
+        </AppText>
+      ) : null}
+      <Button
+        label={connecting ? 'Connecting\u2026' : 'Connect Google Calendar'}
+        onPress={connect}
+        loading={connecting}
+        disabled={!isRequestReady}
+        style={{ marginTop: theme.spacing.md }}
+      />
+      {!isRequestReady ? (
+        <AppText variant="caption" color="textSecondary" style={{ marginTop: theme.spacing.sm }}>
+          Google sign-in isn't configured yet — add your client IDs to .env (see SETUP.md).
+        </AppText>
+      ) : null}
+    </Card>
+  );
 }
 
 function MenuRow({ icon: Icon, label, sublabel, onPress, theme, destructive, card }) {
@@ -222,6 +290,7 @@ const getMeStyles = (theme) =>
       marginBottom: theme.spacing.xl,
     },
     refRow: { flexDirection: 'row', alignItems: 'center' },
+    gcalRow: { flexDirection: 'row', alignItems: 'center' },
     refIconWrap: {
       width: 40,
       height: 40,
@@ -305,8 +374,21 @@ function MeStack() {
   );
 }
 
+function ExploreStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="ExploreHome" component={ExploreHomeScreen} />
+      <Stack.Screen name="AllEvents" component={AllEventsScreen} />
+      <Stack.Screen name="AddEventFromExplore" component={AddEventWrapper} />
+      <Stack.Screen name="Community" component={CommunityScreen} />
+      <Stack.Screen name="CreateGroup" component={CreateGroupScreen} options={{ presentation: 'modal' }} />
+    </Stack.Navigator>
+  );
+}
+
 function Tabs() {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   return (
     <Tab.Navigator
       screenOptions={{
@@ -319,15 +401,17 @@ function Tabs() {
         tabBarStyle: {
           backgroundColor: theme.color.surface,
           borderTopColor: theme.color.border,
-          height: 60,
-          paddingBottom: 8,
+
+          height: 60 + insets.bottom,
+          paddingBottom: 8 + insets.bottom,
+
           paddingTop: 6,
         },
         tabBarLabelStyle: { fontFamily: theme.fontFamily.medium, fontSize: 12 },
       }}
     >
       <Tab.Screen name="Calendar" component={CalendarStack} options={{ tabBarIcon: ({ color, size }) => <CalendarDays color={color} size={size} /> }} />
-      <Tab.Screen name="Explore" component={ExploreScreen} options={{ tabBarIcon: ({ color, size }) => <Compass color={color} size={size} /> }} />
+      <Tab.Screen name="Explore" component={ExploreStack} options={{ tabBarIcon: ({ color, size }) => <Compass color={color} size={size} /> }} />
       <Tab.Screen name="Me" component={MeStack} options={{ tabBarIcon: ({ color, size }) => <User color={color} size={size} /> }} />
     </Tab.Navigator>
   );

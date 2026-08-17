@@ -2,8 +2,10 @@
 // Lets the devotee pick their state (and panji, if that state has more than
 // one) so the calendar knows which GitHub panchang data to load. Picking no
 // state at all is valid — the calendar just falls back to a plain grid.
+// Also provides a toggle to connect / disconnect Google Calendar so personal
+// events are synced automatically.
 import React from 'react';
-import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { View, ScrollView, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import { Check } from 'lucide-react-native';
 import { useTheme } from '../theme/ThemeContext';
 import AppText from '../components/AppText';
@@ -12,18 +14,27 @@ import Card from '../components/Card';
 import Screen from '../components/Screen';
 import { AVAILABLE_STATES } from '../services/panchangService';
 import { usePreferences } from '../hooks/usePreferences';
+import { useGoogleCalendar } from '../hooks/useGoogleCalendar';
 
 export default function PreferencesScreen({ onDone }) {
   const theme = useTheme();
   const styles = getStyles(theme);
   const { preferences, setState, setPanji } = usePreferences();
+  const {
+    connected: googleConnected,
+    connecting: googleConnecting,
+    error: googleError,
+    connect: connectGoogle,
+    disconnect: disconnectGoogle,
+    isRequestReady,
+  } = useGoogleCalendar();
 
   if (!preferences) return null;
 
   const selectedState = AVAILABLE_STATES.find((s) => s.key === preferences.state);
 
   return (
-    <Screen edges={['top', 'bottom', 'left', 'right']}>
+    <Screen edges={['top', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.content}>
         <AppText variant="h2" style={{ marginBottom: theme.spacing.xs }}>
           Your calendar
@@ -68,6 +79,39 @@ export default function PreferencesScreen({ onDone }) {
             </Card>
           </>
         )}
+
+        {/* ---- Google Calendar sync ---- */}
+        <AppText variant="caption" color="textSecondary" style={{ marginBottom: theme.spacing.sm }}>
+          GOOGLE CALENDAR
+        </AppText>
+        <Card style={{ marginBottom: theme.spacing.xl }}>
+          <AppText variant="body" style={{ marginBottom: theme.spacing.xs }}>
+            {googleConnected ? 'Connected ✓' : 'Not connected'}
+          </AppText>
+          <AppText variant="bodySmall" color="textSecondary" style={{ marginBottom: theme.spacing.md }}>
+            {googleConnected
+              ? 'Personal events you add will automatically sync to your Google Calendar.'
+              : 'Connect your Google account so personal events are added to your Google Calendar automatically.'}
+          </AppText>
+
+          {googleError ? (
+            <AppText variant="bodySmall" color="error" style={{ marginBottom: theme.spacing.sm }}>
+              {googleError}
+            </AppText>
+          ) : null}
+
+          {googleConnecting ? (
+            <ActivityIndicator color={theme.color.primary} />
+          ) : googleConnected ? (
+            <Button label="Disconnect" variant="secondary" onPress={disconnectGoogle} />
+          ) : (
+            <Button
+              label="Connect Google Calendar"
+              onPress={connectGoogle}
+              disabled={!isRequestReady}
+            />
+          )}
+        </Card>
       </ScrollView>
 
       <View style={styles.footer}>
@@ -105,7 +149,7 @@ const getStyles = (theme) =>
     screen: { flex: 1, backgroundColor: theme.color.background },
     content: { padding: theme.spacing.base, paddingBottom: theme.spacing.huge },
     footer: {
-      padding: theme.spacing.base,
+      padding: theme.spacing.sm,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: theme.color.border,
       backgroundColor: theme.color.surface,

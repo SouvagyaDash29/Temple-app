@@ -1,14 +1,19 @@
 // src/hooks/usePushNotifications.js
 import { useEffect, useRef, useState } from 'react';
 import {
+  ensureNotificationPermissions,
   registerForPushNotifications,
   addNotificationResponseListener,
-} from '../services/notificationService1';
+} from '../services/notificationService';
 import { userApi } from '../services/calendarApi';
 
 /**
- * Call once near the app root (see App.js). Registers the device for push,
- * saves the Expo push token to the backend, and routes notification taps.
+ * Call once near the app root (see App.js).
+ *  1. Always ensures local notification permission + the Android channel —
+ *     this alone is enough for event reminders to work, no Firebase needed.
+ *  2. Separately (best-effort) registers for remote push. If FCM isn't
+ *     configured on Android yet, this step fails quietly and step 1 is
+ *     unaffected.
  */
 export function usePushNotifications({ onNotificationTap } = {}) {
   const [expoPushToken, setExpoPushToken] = useState(null);
@@ -19,13 +24,17 @@ export function usePushNotifications({ onNotificationTap } = {}) {
     let isMounted = true;
 
     (async () => {
-      const token = await registerForPushNotifications();
+      const granted = await ensureNotificationPermissions();
       if (!isMounted) return;
-
-      if (!token) {
+      if (!granted) {
         setPermissionDenied(true);
         return;
       }
+
+      // Remote push is optional — never let a failure here affect local
+      // reminders, which have already been unlocked above.
+      const token = await registerForPushNotifications();
+      if (!isMounted || !token) return;
 
       setExpoPushToken(token);
       try {

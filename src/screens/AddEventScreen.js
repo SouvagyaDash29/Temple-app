@@ -20,6 +20,10 @@ const REMINDER_OPTIONS = [
   { key: '1_hour', label: '1 hour before' },
   { key: '1_day', label: '1 day before' },
   { key: '1_week', label: '1 week before' },
+  // Dev/testing only — fires ~1 min after saving regardless of event date,
+  // so you can confirm local notifications work without waiting. Remove
+  // this option before shipping to production.
+  { key: '1_min_test', label: 'Test: 1 min (dev only)' },
 ];
 
 /**
@@ -101,7 +105,7 @@ export default function AddEventScreen({ initialDate = new Date(), eventId = nul
   }
 
   return (
-    <Screen edges={['top', 'bottom', 'left', 'right']}>
+    <Screen edges={['top', 'left', 'right']}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -112,87 +116,87 @@ export default function AddEventScreen({ initialDate = new Date(), eventId = nul
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-        <View style={styles.titleRow}>
-          <AppText variant="h2">{isEditMode ? 'Edit Event' : 'Add Event'}</AppText>
-          {isEditMode && (
-            <Pressable onPress={handleDelete} disabled={deleting} hitSlop={8}>
-              {deleting ? <ActivityIndicator color={theme.color.error} /> : <Trash2 size={22} color={theme.color.error} />}
+          <View style={styles.titleRow}>
+            <AppText variant="h2">{isEditMode ? 'Edit Event' : 'Add Event'}</AppText>
+            {isEditMode && (
+              <Pressable onPress={handleDelete} disabled={deleting} hitSlop={8}>
+                {deleting ? <ActivityIndicator color={theme.color.error} /> : <Trash2 size={22} color={theme.color.error} />}
+              </Pressable>
+            )}
+          </View>
+
+          <Field label="Title">
+            <TextInput
+              value={title}
+              onChangeText={setTitle}
+              placeholder="Father's Birthday"
+              placeholderTextColor={theme.color.textDisabled}
+              style={styles.input}
+            />
+          </Field>
+
+          <Field label="Date">
+            <Pressable onPress={() => setShowDatePicker(true)} style={styles.input}>
+              <AppText variant="body">{formatFullDate(date)}</AppText>
             </Pressable>
-          )}
-        </View>
+            {showDatePicker && (
+              <DateTimePicker
+                value={date}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                onChange={(_, selected) => {
+                  setShowDatePicker(Platform.OS === 'ios');
+                  if (selected) setDate(selected);
+                }}
+              />
+            )}
+          </Field>
 
-        <Field label="Title">
-          <TextInput
-            value={title}
-            onChangeText={setTitle}
-            placeholder="Father's Birthday"
-            placeholderTextColor={theme.color.textDisabled}
-            style={styles.input}
-          />
-        </Field>
+          <Field label="Time">
+            <Pressable onPress={() => setShowTimePicker(true)} style={styles.input}>
+              <AppText variant="body">{formatTime(date)}</AppText>
+            </Pressable>
+            {showTimePicker && (
+              <DateTimePicker
+                value={date}
+                mode="time"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={(_, selected) => {
+                  setShowTimePicker(Platform.OS === 'ios');
+                  if (selected) setDate(selected);
+                }}
+              />
+            )}
+          </Field>
 
-        <Field label="Date">
-          <Pressable onPress={() => setShowDatePicker(true)} style={styles.input}>
-            <AppText variant="body">{formatFullDate(date)}</AppText>
-          </Pressable>
-          {showDatePicker && (
-            <DateTimePicker
-              value={date}
-              mode="date"
-              display={Platform.OS === 'ios' ? 'inline' : 'default'}
-              onChange={(_, selected) => {
-                setShowDatePicker(Platform.OS === 'ios');
-                if (selected) setDate(selected);
-              }}
+          <Field label="Repeat">
+            <OptionRow options={REPEAT_OPTIONS} value={repeat} onChange={setRepeat} />
+          </Field>
+
+          <Field label="Reminder">
+            <OptionRow options={REMINDER_OPTIONS} value={reminder} onChange={setReminder} />
+          </Field>
+
+          <Field label="Notes">
+            <TextInput
+              value={notes}
+              onChangeText={setNotes}
+              placeholder="Optional"
+              placeholderTextColor={theme.color.textDisabled}
+              style={[styles.input, styles.textArea]}
+              multiline
             />
-          )}
-        </Field>
+          </Field>
 
-        <Field label="Time">
-          <Pressable onPress={() => setShowTimePicker(true)} style={styles.input}>
-            <AppText variant="body">{formatTime(date)}</AppText>
-          </Pressable>
-          {showTimePicker && (
-            <DateTimePicker
-              value={date}
-              mode="time"
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-              onChange={(_, selected) => {
-                setShowTimePicker(Platform.OS === 'ios');
-                if (selected) setDate(selected);
-              }}
-            />
-          )}
-        </Field>
-
-        <Field label="Repeat">
-          <OptionRow options={REPEAT_OPTIONS} value={repeat} onChange={setRepeat} />
-        </Field>
-
-        <Field label="Reminder">
-          <OptionRow options={REMINDER_OPTIONS} value={reminder} onChange={setReminder} />
-        </Field>
-
-        <Field label="Notes">
-          <TextInput
-            value={notes}
-            onChangeText={setNotes}
-            placeholder="Optional"
-            placeholderTextColor={theme.color.textDisabled}
-            style={[styles.input, styles.textArea]}
-            multiline
-          />
-        </Field>
-
-        {error ? (
-          <AppText variant="bodySmall" color="error" style={{ marginBottom: theme.spacing.base }}>
-            {error}
-          </AppText>
-        ) : null}
-      </ScrollView>
+          {error ? (
+            <AppText variant="bodySmall" color="error" style={{ marginBottom: theme.spacing.base }}>
+              {error}
+            </AppText>
+          ) : null}
+        </ScrollView>
 
         <View style={styles.footer}>
-          <Button label="Cancel" variant="text" onPress={onCancel} fullWidth={false} style={{ marginRight: theme.spacing.md }} />
+          <Button label="Cancel" variant="secondary" onPress={onCancel} fullWidth={false} style={{ marginRight: theme.spacing.md }} />
           <Button
             label={isEditMode ? 'Update Event' : 'Save Event'}
             onPress={handleSave}

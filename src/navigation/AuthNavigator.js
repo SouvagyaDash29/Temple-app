@@ -3,8 +3,11 @@
 // Login (see context/AuthContext.js bootstrap logic); this component just
 // adds local screen switching for "Forgot PIN?" within that.
 import React, { useState } from 'react';
-import { RegisterScreen, LoginScreen, ForgetPinScreen } from '../screens/auth1';
+// import { RegisterScreen, LoginScreen, ForgetPinScreen } from '../screens/auth';
 import { useAuthContext } from '../context/AuthContext';
+import ForgetPinScreen from '../screens/auth/ForgetPinScreen';
+import RegisterScreen from '../screens/auth/RegisterScreen';
+import LoginScreen from '../screens/auth/LoginScreen';
 
 export default function AuthNavigator() {
     const { status, goToRegister, goToLogin } = useAuthContext();

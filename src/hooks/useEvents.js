@@ -4,7 +4,7 @@
 // `eventsApi` later; the hook's public shape won't need to change.
 import { useCallback, useState } from 'react';
 import { localStorage } from '../services/localStorage';
-import { scheduleEventReminder, cancelReminder } from '../services/notificationService1';
+import { scheduleEventReminder, cancelReminder } from '../services/notificationService';
 import {
   addEventToGoogleCalendar,
   updateGoogleCalendarEvent,
@@ -12,7 +12,7 @@ import {
   isGoogleCalendarConnected,
 } from '../services/googleCalendarService';
 
-const REMINDER_MINUTES = { '15_min': 15, '1_hour': 60, '1_day': 1440, '1_week': 10080 };
+const REMINDER_MINUTES = { '1_min_test': 1, '15_min': 15, '1_hour': 60, '1_day': 1440, '1_week': 10080 };
 
 function makeId() {
   return `evt_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;

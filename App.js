@@ -16,7 +16,7 @@ import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 import { AuthProvider, useAuthContext } from './src/context/AuthContext';
 import SplashScreen from './src/screens/SplashScreen';
 import OnboardingScreen from './src/screens/OnboardingScreen';
-import PreferencesScreen from './src/screens/dump/PreferencesScreen';
+import PreferencesScreen from './src/screens/PreferencesScreen';
 import AuthNavigator from './src/navigation/AuthNavigator';
 import RootNavigator from './src/navigation/RootNavigator';
 import { useOnboarding } from './src/hooks/useOnboarding';
